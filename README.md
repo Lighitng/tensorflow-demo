@@ -2,7 +2,7 @@
 
 ## 常用命令
 
-``` bash
+``` python
 # 引入TensorFlow模块
 import tensorflow as tf
 ```
