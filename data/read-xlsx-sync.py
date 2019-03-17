@@ -39,6 +39,6 @@ def read_excel_sync():
             'title': data['title'],
             'data': pd.DataFrame(data['data'], columns=attributes)
         })
-    return read_excel_sync()
+    return dataFrames
 if __name__ == '__main__':
     read_excel_sync()
