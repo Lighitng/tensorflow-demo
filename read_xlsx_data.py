@@ -14,7 +14,7 @@ from datetime import date, datetime
 # [...data]
 def read_excel_sync():
     # 打开文件
-    workbook = xlrd.open_workbook(r'./Bengbu_4 data analysis.xlsx')
+    workbook = xlrd.open_workbook(r'./data/rawdata.xlsx')
     # 获取一张表
     sheet = workbook.sheet_by_index(0)
     # print(len(sheet.row_values(2)))

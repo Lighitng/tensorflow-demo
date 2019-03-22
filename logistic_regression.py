@@ -12,7 +12,7 @@ from sklearn import  datasets
 # 将表格中的数据导入
 datas = rd.read_excel_sync()
 data = datas[0]['data'].values
-target_data = np.asarray([1.0 if x != 0 else 1.0 for x in data])
+target_data = np.asarray([1.0 if len(x) != 0 else 1.0 for x in data])
 
 '''
 # 训练组数的定义
@@ -78,11 +78,12 @@ optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cross_entr
 # 进行数据预处理
 # 训练集
 X_train = data[1:80]
-Y_train = target_data[1:80]
+Y_train = [[_] for _ in target_data[1:80]]
+
 
 # 测试集
 X_test = data[90:100]
-Y_test = target_data[90:100]
+Y_test = [[_] for _ in target_data[90:100]]
 
 b = MinMaxScaler()
 X_test_cen = b.fit_transform(X_test)
@@ -105,7 +106,7 @@ with tf.Session() as sess:
         if i % display_step == 0:
             # 输出交叉熵之和
             total_cross_entropy_train = sess.run(cross_entropy,feed_dict={x: X_train_cen, y: Y_train})
-            print("After &d training step(s), cross entropy on all data is %g" % (i, total_cross_entropy_train))
+            print("After %d training step(s), cross entropy on all data is %g" % (i, total_cross_entropy_train))
             # 输出准确度
             # 每10轮迭代计算一次准确度
             accuracy_rate = sess.run(accuracy, feed_dict={x: X_train_cen, y: Y_train, keep_prob:1.0})
@@ -114,7 +115,7 @@ with tf.Session() as sess:
 # 通过选取样本训练神经网络并更新参数
     for i in range(testing_step):
         total_cross_entropy_test = sess.run(cross_entropy, feed_dict={x: X_test_cen, y: Y_test})
-        print("After &d training step(s), cross entropy on all data is %g" % (i, total_cross_entropy_test))
+        print("After %d training step(s), cross entropy on all data is %g" % (i, total_cross_entropy_test))
         accuracy_rate1 = sess.run(accuracy, feed_dict={x: X_test_cen, y: Y_test, keep_prob: 1.0})
         print('第' + str(i) + '轮,Testing的准确度为：' + str(accuracy_rate1))
 
