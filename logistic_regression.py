@@ -11,9 +11,21 @@ from sklearn import  datasets
 
 # 将表格中的数据导入
 datas = rd.read_excel_sync()
-data = datas[0]['data'].values
-target_data = np.asarray([1.0 if len(x) != 0 else 1.0 for x in data])
-
+posdata = datas[0]['data'].values
+negdata = datas[1]['data'].values
+target_data = []
+data = []
+for (index, el) in enumerate(posdata):
+    target_data.append(1.0)
+    data.append(el)
+    target_data.append(0.0)
+    data.append(negdata[index])
+    if index > 100:
+        print('100 enough')
+        break
+target_data = np.asarray(target_data)
+print(len(posdata))
+print(len(negdata))
 '''
 # 训练组数的定义
 BATCH_SIZE = 60
@@ -33,7 +45,7 @@ x7_data = tf.placeholder(shape=[BATCH_SIZE, 1], dtype=tf.float32, name="x7")
 
 # 定义神经网络的参数
 learning_rate = 0.009  # 学习率
-training_step = 1000  # 训练迭代次数
+training_step = 2000  # 训练迭代次数
 testing_step = 500  # 测试迭代次数
 display_step = 100  # 每多少次迭代显示一次损失
 
@@ -77,13 +89,13 @@ optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cross_entr
 
 # 进行数据预处理
 # 训练集
-X_train = data[1:80]
-Y_train = [[_] for _ in target_data[1:80]]
+X_train = data[1:100]
+Y_train = [[_] for _ in target_data[1:100]]
 
 
 # 测试集
-X_test = data[90:100]
-Y_test = [[_] for _ in target_data[90:100]]
+X_test = data[100:150]
+Y_test = [[_] for _ in target_data[100:150]]
 
 b = MinMaxScaler()
 X_test_cen = b.fit_transform(X_test)
