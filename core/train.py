@@ -190,3 +190,5 @@ if __name__ == '__main__':
   plt.legend(handles=[observed_lines[0], evaluated_lines[0], predicted_lines[0]],
              loc="upper left")
   plt.savefig('predict_result_multi.png')
+  # banzhang commit1
+  # banzhang commit2
