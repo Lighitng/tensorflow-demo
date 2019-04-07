@@ -19,6 +19,10 @@ from __future__ import print_function
 
 from os import path
 
+import os
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"#指定在第0块GPU上跑
+
 import numpy
 import tensorflow as tf
 
@@ -33,10 +37,6 @@ from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 from keras import backend as K
 K.tensorflow_backend._get_available_gpus()
-
-import os
-#os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"#指定在第0块GPU上跑
 
 class _LSTMModel(ts_model.SequentialTimeSeriesModel):
   """A time series model-building example using an RNNCell."""
@@ -54,8 +54,8 @@ class _LSTMModel(ts_model.SequentialTimeSeriesModel):
     """
     super(_LSTMModel, self).__init__(
         # Pre-register the metrics we'll be outputting (just a mean here).
-        train_output_names=["mean"],
-        predict_output_names=["mean"],
+        train_output_names=["train"],
+        predict_output_names=["predict"],
         num_features=num_features,
         dtype=dtype)
     self._num_units = num_units
@@ -163,42 +163,43 @@ class _LSTMModel(ts_model.SequentialTimeSeriesModel):
 
 
 if __name__ == '__main__':
-  for i in range(4,10):
-    tf.logging.set_verbosity(tf.logging.INFO)
-    csv_file_name = path.join("./data/rawdatas.csv")
-    reader = tf.contrib.timeseries.CSVReader(
-        csv_file_name,
-        column_names=((tf.contrib.timeseries.TrainEvalFeatures.TIMES,)
-                    + (tf.contrib.timeseries.TrainEvalFeatures.VALUES,) * 6))
-    train_input_fn = tf.contrib.timeseries.RandomWindowInputFn(
-        reader, batch_size=4, window_size=32)
+  # for i in range(4,10):
+  tf.logging.set_verbosity(tf.logging.INFO)
+  csv_file_name = path.join("./data/rawdatas.csv")
+  reader = tf.contrib.timeseries.CSVReader(
+      csv_file_name,
+      column_names=((tf.contrib.timeseries.TrainEvalFeatures.TIMES,)
+                  + (tf.contrib.timeseries.TrainEvalFeatures.VALUES,) * 6))
+  train_input_fn = tf.contrib.timeseries.RandomWindowInputFn(
+      reader, batch_size=4, window_size=32)
 
-    estimator = ts_estimators.TimeSeriesRegressor(
-        model=_LSTMModel(num_features=6, num_units=128),
-        optimizer=tf.train.AdamOptimizer(0.001))
+  estimator = ts_estimators.TimeSeriesRegressor(
+      model=_LSTMModel(num_features=6, num_units=128),
+      optimizer=tf.train.AdamOptimizer(0.001))
 
-    estimator.train(input_fn=train_input_fn, steps=200)
-    evaluation_input_fn = tf.contrib.timeseries.WholeDatasetInputFn(reader)
-    evaluation = estimator.evaluate(input_fn=evaluation_input_fn, steps=1)
+  estimator.train(input_fn=train_input_fn, steps=200)
+  evaluation_input_fn = tf.contrib.timeseries.WholeDatasetInputFn(reader)
+  evaluation = estimator.evaluate(input_fn=evaluation_input_fn, steps=1)
   # Predict starting after the evaluation
-    (predictions,) = tuple(estimator.predict(
-        input_fn=tf.contrib.timeseries.predict_continuation_input_fn(
-            evaluation, steps=100)))
+  (predictions,) = tuple(estimator.predict(
+      input_fn=tf.contrib.timeseries.predict_continuation_input_fn(
+          evaluation, steps=100)))
 
-    observed_times = evaluation["times"][0]
-    observed = evaluation["observed"][0, :, :]
-    evaluated_times = evaluation["times"][0]
-    evaluated = evaluation["mean"][0]
-    predicted_times = predictions['times']
-    predicted = predictions["mean"]
+  observed_times = evaluation["times"][0]
+  observed = evaluation["observed"][0, :, :]
+  evaluated_times = evaluation["times"][0]
+  evaluated = evaluation["mean"][0]
+  predicted_times = predictions['times']
+  predicted = predictions["mean"]
 
-    plt.figure(figsize=(15, 5))
-    plt.axvline(99, linestyle="dotted", linewidth=4, color='r')
-    observed_lines = plt.plot(observed_times, observed, label="observation", color="k")
-    evaluated_lines = plt.plot(evaluated_times, evaluated, label="evaluation", color="g")
-    predicted_lines = plt.plot(predicted_times, predicted, label="prediction", color="r")
-    plt.legend(handles=[observed_lines[0], evaluated_lines[0], predicted_lines[0]],
-             loc="upper left")
-    plt.savefig('./Pic/predict_result_multi('+ str(i) + ').png')
+  plt.figure(figsize=(15, 5))
+  plt.axvline(99, linestyle="dotted", linewidth=4, color='r')
+  observed_lines = plt.plot(observed_times, observed, label="observation", color="k")
+  evaluated_lines = plt.plot(evaluated_times, evaluated, label="evaluation", color="g")
+  predicted_lines = plt.plot(predicted_times, predicted, label="prediction", color="r")
+  plt.legend(handles=[observed_lines[0], evaluated_lines[0], predicted_lines[0]],
+           loc="upper left")
+    # plt.savefig('./Pic/predict_result_multi('+ str(i) + ').png')
+  plt.savefig('./Pic/predict_result_multi(10).png') 
   # banzhang commit1
   # banzhang commit2
